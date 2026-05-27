@@ -1,0 +1,907 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans), system-ui, -apple-system, sans-serif;color:#1e293b;background-color:#ffffff;padding:1.5rem}
+
+/* Pestañas más grandes y legibles con fondo blanco */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:2rem;padding:1rem 0 0;border-bottom:1px solid #e2e8f0}
+.tab{padding:10px 16px;font-size:15px;border:1px solid #cbd5e1;border-radius:var(--border-radius-md);cursor:pointer;background:#ffffff;color:#64748b;font-weight:500;transition:all 0.15s ease}
+.tab:hover{background:#f8fafc;color:#0f172a}
+.tab.active{background:var(--color-background-info, #e0f2fe);color:var(--color-text-info, #0369a1);border-color:transparent;font-weight:600}
+
+.panel{display:none}.panel.active{display:block}
+
+/* Tarjetas sobre fondo blanco con bordes definidos y más espacio */
+.card{background:#ffffff;border:1px solid #cbd5e1;border-radius:var(--border-radius-lg);padding:2rem;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+
+/* Tipografía significativamente más grande */
+h3{font-size:20px;font-weight:600;margin-bottom:1.5rem;color:#0f172a;letter-spacing:-0.01em}
+lbl{font-size:15px;font-weight:500;color:#475569;display:block;margin:16px 0 6px}
+
+/* Inputs y Selects considerablemente más amplios y legibles */
+input,select{width:100%;padding:11px 14px;border:1px solid #cbd5e1;border-radius:var(--border-radius-md);font-size:16px;background:#ffffff;color:#0f172a;font-family:var(--font-sans);transition:border-color 0.15s ease}
+input:focus,select:focus{border-color:#3b82f6;outline:none;box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
+
+/* Botones más grandes y estilizados */
+.btn{padding:11px 22px;border:1px solid #cbd5e1;border-radius:var(--border-radius-md);cursor:pointer;font-size:15px;background:#ffffff;color:#334155;font-family:var(--font-sans);font-weight:500;transition:all 0.15s ease}
+.btn:hover{background:#f1f5f9;border-color:#94a3b8}
+.btn.primary{background:var(--color-background-info, #3b82f6);color:var(--color-text-info, #ffffff);border-color:transparent}
+.btn.primary:hover{opacity:0.9}
+
+/* Cajas de resultados y previsualización con tipografía aumentada */
+.result{background:#f8fafc;border-radius:var(--border-radius-md);padding:1.25rem;margin-top:1.5rem;font-family:var(--font-mono);font-size:14.5px;white-space:pre-wrap;line-height:1.7;color:#0f172a;border:1px solid #e2e8f0}
+.poly-box{background:#ffffff;border:1px solid #cbd5e1;border-radius:var(--border-radius-md);padding:1rem 1.25rem;margin:10px 0;font-size:15px;line-height:1.8;color:#0f172a}
+.fpreview{font-family:var(--font-mono);font-size:15px;padding:10px 14px;background:#f8fafc;border-radius:var(--border-radius-md);min-height:42px;margin-bottom:8px;color:#0f172a;border:1px solid #e2e8f0;display:flex;align-items:center}
+
+/* Separadores e indicaciones de pasos */
+.step-label{font-size:12.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin:18px 0 6px}
+.err{background:var(--color-background-danger, #fee2e2);color:var(--color-text-danger, #991b1b);border-radius:var(--border-radius-md);padding:1rem;margin-top:1rem;font-size:15px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.hint{font-size:13px;color:#64748b;margin-top:5px;font-style:italic}
+.fkb{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
+.fk{padding:6px 14px;font-size:14px;border:1px solid #cbd5e1;border-radius:var(--border-radius-md);cursor:pointer;background:#f8fafc;color:#0f172a;font-family:var(--font-mono);transition:all 0.15s}
+.fk:hover{background:#ffffff;border-color:#64748b}
+</style>
+
+<h2 class="sr-only">Calculadora de métodos numéricos: interpolación, mínimos cuadrados, splines, diferenciación e integración</h2>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('newton',this)">Newton Dif. Div.</button>
+  <button class="tab" onclick="showTab('hermite',this)">Hermite</button>
+  <button class="tab" onclick="showTab('mincuad',this)">Mín. Cuadrados</button>
+  <button class="tab" onclick="showTab('spline',this)">Splines</button>
+  <button class="tab" onclick="showTab('difnum',this)">Dif. Numérica</button>
+  <button class="tab" onclick="showTab('trap',this)">Trapecios</button>
+  <button class="tab" onclick="showTab('simpson',this)">Simpson</button>
+</div>
+
+<div class="panel active" id="panel-newton">
+<div class="card">
+<h3>Interpolación de Newton — Diferencias Divididas</h3>
+<lbl>Puntos x (separados por comas)</lbl>
+<input id="nwt-x" placeholder="0, 1, 2, 3"/>
+<lbl>Valores f(x)</lbl>
+<input id="nwt-y" placeholder="1, 4, 9, 16"/>
+<lbl>Punto a evaluar</lbl>
+<input id="nwt-eval" placeholder="1.5" type="number" step="any"/>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn primary" onclick="calcNewton()">Calcular</button>
+<button class="btn" onclick="$('res-newton').innerHTML=''">Limpiar</button>
+</div>
+<div id="res-newton"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-hermite">
+<div class="card">
+<h3>Interpolación de Hermite</h3>
+<lbl>Puntos x</lbl>
+<input id="herm-x" placeholder="0, 1, 2"/>
+<lbl>Valores f(x)</lbl>
+<input id="herm-y" placeholder="1, 2.718, 7.389"/>
+<lbl>Valores f'(x)</lbl>
+<input id="herm-dy" placeholder="1, 2.718, 7.389"/>
+<lbl>Punto a evaluar</lbl>
+<input id="herm-eval" placeholder="0.5" type="number" step="any"/>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn primary" onclick="calcHermite()">Calcular</button>
+<button class="btn" onclick="$('res-hermite').innerHTML=''">Limpiar</button>
+</div>
+<div id="res-hermite"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-mincuad">
+<div class="card">
+<h3>Mínimos Cuadrados</h3>
+<div class="row2">
+<div>
+<lbl>Modo</lbl>
+<select id="mc-modo" onchange="updateMCUI()">
+  <option value="disc-poly">Discreto — polinomio grado n</option>
+  <option value="disc-lin">Discreto — lineal</option>
+  <option value="cont">Continuo (función explícita)</option>
+</select>
+</div>
+<div id="mc-gw">
+<lbl>Grado</lbl>
+<input id="mc-grado" type="number" min="1" max="8" value="2"/>
+</div>
+</div>
+<div id="mc-discr">
+<lbl>Puntos x</lbl><input id="mc-x" placeholder="0, 1, 2, 3, 4"/>
+<lbl>Valores y</lbl><input id="mc-y" placeholder="1, 1.8, 1.3, 2.5, 6.3"/>
+</div>
+<div id="mc-cont" style="display:none">
+<lbl>Función f(x)</lbl>
+<div class="fkb" id="mc-kb"></div>
+<div class="fpreview" id="mc-prev">f(x) = </div>
+<input id="mc-func" placeholder="exp(x)" oninput="updatePrev('mc-func','mc-prev')"/>
+<div class="row2" style="margin-top:6px">
+<div><lbl>a</lbl><input id="mc-a" type="number" step="any" placeholder="0"/></div>
+<div><lbl>b</lbl><input id="mc-b" type="number" step="any" placeholder="1"/></div>
+</div>
+<lbl>Grado aproximante</lbl>
+<input id="mc-gc" type="number" min="1" max="6" value="2"/>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn primary" onclick="calcMinCuad()">Calcular</button>
+<button class="btn" onclick="$('res-mincuad').innerHTML=''">Limpiar</button>
+</div>
+<div id="res-mincuad"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-spline">
+<div class="card">
+<h3>Splines de interpolación</h3>
+<div class="row2">
+<div>
+<lbl>Tipo de spline</lbl>
+<select id="sp-tipo">
+  <option value="cuadratico">Cuadrático (grado 2)</option>
+  <option value="cubico">Cúbico natural (grado 3)</option>
+</select>
+</div>
+<div>
+<lbl>Punto a evaluar</lbl>
+<input id="sp-eval" type="number" step="any" placeholder="1.5"/>
+</div>
+</div>
+<lbl>Puntos x</lbl>
+<input id="sp-x" placeholder="0, 1, 2, 3"/>
+<lbl>Valores f(x)</lbl>
+<input id="sp-y" placeholder="0, 0.5, 2, 1.5"/>
+<div id="sp-quad-opts">
+<lbl>Condición inicial S'(x₀) = (solo spline cuadrático)</lbl>
+<input id="sp-s0" type="number" step="any" placeholder="0"/>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn primary" onclick="calcSpline()">Calcular</button>
+<button class="btn" onclick="$('res-spline').innerHTML=''">Limpiar</button>
+</div>
+<div id="res-spline"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-difnum">
+<div class="card">
+<h3>Diferenciación numérica</h3>
+<div class="row2">
+<div>
+<lbl>Modo</lbl>
+<select id="dn-modo" onchange="updateDNUI()">
+  <option value="tabla">Tabla de valores</option>
+  <option value="func">Función explícita</option>
+</select>
+</div>
+<div>
+<lbl>Orden</lbl>
+<select id="dn-orden">
+  <option value="1">Primera derivada</option>
+  <option value="2">Segunda derivada</option>
+</select>
+</div>
+</div>
+<lbl>Fórmula</lbl>
+<select id="dn-formula">
+  <option value="all">Mostrar todas</option>
+  <option value="central">Central</option>
+  <option value="forward">Progresiva (adelante)</option>
+  <option value="backward">Regresiva (atrás)</option>
+</select>
+<div id="dn-tabla-wrap">
+<lbl>Puntos x (no necesitan ser equiespaciados)</lbl>
+<input id="dn-x" placeholder="0, 0.5, 1.2, 1.5, 1.8"/>
+<lbl>Valores f(x)</lbl>
+<input id="dn-y" placeholder="0, 0.479, 0.932, 0.997, 0.974"/>
+<lbl>Índice del punto x₀ (0 = primero), Indica que posicion ocupa el valor a calcular no el valor como tal</lbl>
+<input id="dn-idx" type="number" min="0" value="2" placeholder="2"/>
+<p class="hint">El índice 2 corresponde al tercer valor de la tabla</p>
+</div>
+<div id="dn-func-wrap" style="display:none">
+<lbl>Función f(x)</lbl>
+<div class="fkb" id="dn-kb"></div>
+<div class="fpreview" id="dn-prev">f(x) = </div>
+<input id="dn-func" placeholder="sin(x)" oninput="updatePrev('dn-func','dn-prev')"/>
+<lbl>Punto x₀</lbl>
+<input id="dn-x0" type="number" step="any" placeholder="1.5"/>
+<lbl>Paso h</lbl>
+<input id="dn-h" type="number" step="any" placeholder="0.001" value="0.001"/>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn primary" onclick="calcDifNum()">Calcular</button>
+<button class="btn" onclick="$('res-difnum').innerHTML=''">Limpiar</button>
+</div>
+<div id="res-difnum"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-trap">
+<div class="card">
+<h3>Regla del Trapecio</h3>
+<lbl>Modo</lbl>
+<select id="tr-modo" onchange="updateTrapUI()">
+  <option value="func">Función explícita</option>
+  <option value="tabla">Tabla de valores</option>
+</select>
+<div id="tr-func-wrap">
+<lbl>Función f(x)</lbl>
+<div class="fkb" id="tr-kb"></div>
+<div class="fpreview" id="tr-prev">f(x) = </div>
+<input id="tr-func" placeholder="exp(-x^2)" oninput="updatePrev('tr-func','tr-prev')"/>
+<div class="row3" style="margin-top:6px">
+<div><lbl>a</lbl><input id="tr-a" type="number" step="any" placeholder="0"/></div>
+<div><lbl>b</lbl><input id="tr-b" type="number" step="any" placeholder="1"/></div>
+<div><lbl>n subintervalos</lbl><input id="tr-n" type="number" min="1" value="4"/></div>
+</div>
+</div>
+<div id="tr-tabla-wrap" style="display:none">
+<lbl>Puntos x</lbl><input id="tr-tx" placeholder="0, 0.25, 0.5, 0.75, 1"/>
+<lbl>Valores f(x)</lbl><input id="tr-ty" placeholder="1, 0.939, 0.779, 0.570, 0.368"/>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn primary" onclick="calcTrapecio()">Calcular</button>
+<button class="btn" onclick="$('res-trap').innerHTML=''">Limpiar</button>
+</div>
+<div id="res-trap"></div>
+</div>
+</div>
+
+<div class="panel" id="panel-simpson">
+<div class="card">
+<h3>Métodos de Simpson</h3>
+<div class="row2">
+<div>
+<lbl>Regla</lbl>
+<select id="si-regla">
+  <option value="1/3">Simpson 1/3 (n par)</option>
+  <option value="3/8">Simpson 3/8 (n múltiplo de 3)</option>
+  <option value="comp">Compuesta automática</option>
+</select>
+</div>
+<div>
+<lbl>Modo</lbl>
+<select id="si-modo" onchange="updateSimpUI()">
+  <option value="func">Función explícita</option>
+  <option value="tabla">Tabla de valores</option>
+</select>
+</div>
+</div>
+<div id="si-func-wrap">
+<lbl>Función f(x)</lbl>
+<div class="fkb" id="si-kb"></div>
+<div class="fpreview" id="si-prev">f(x) = </div>
+<input id="si-func" placeholder="sin(x)" oninput="updatePrev('si-func','si-prev')"/>
+<div class="row3" style="margin-top:6px">
+<div><lbl>a</lbl><input id="si-a" type="number" step="any" placeholder="0"/></div>
+<div><lbl>b</lbl><input id="si-b" type="number" step="any" placeholder="3.14159"/></div>
+<div><lbl>n subintervalos</lbl><input id="si-n" type="number" min="2" value="4"/></div>
+</div>
+</div>
+<div id="si-tabla-wrap" style="display:none">
+<lbl>Puntos x</lbl><input id="si-tx" placeholder="0, 0.25, 0.5, 0.75, 1"/>
+<lbl>Valores f(x)</lbl><input id="si-ty" placeholder="0, 0.247, 0.479, 0.682, 0.841"/>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn primary" onclick="calcSimpson()">Calcular</button>
+<button class="btn" onclick="$('res-simpson').innerHTML=''">Limpiar</button>
+</div>
+<div id="res-simpson"></div>
+</div>
+</div>
+
+
+<script>
+const $=id=>document.getElementById(id);
+function parse(s){return s.split(',').map(v=>parseFloat(v.trim()))}
+function N(n,d=8){if(typeof n!=='number'||isNaN(n))return '?';let s=parseFloat(n.toFixed(d));return s.toString()}
+function showTab(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  $('panel-'+id).classList.add('active');el.classList.add('active');
+}
+function showErr(id,msg){$(id).innerHTML=`<div class="err">${msg}</div>`}
+function res(id,html){$(id).innerHTML=html}
+
+/* ── FUNCTION KEYBOARD ─────────────────────────────────────── */
+const KEYS=[
+  {lbl:'x²',ins:'x^2'},{lbl:'x³',ins:'x^3'},{lbl:'xⁿ',ins:'x^'},
+  {lbl:'√x',ins:'sqrt(x)'},{lbl:'eˣ',ins:'exp(x)'},{lbl:'e',ins:'e'},
+  {lbl:'ln',ins:'ln(x)'},{lbl:'log',ins:'log(x)'},
+  {lbl:'sin',ins:'sin(x)'},{lbl:'cos',ins:'cos(x)'},{lbl:'tan',ins:'tan(x)'},
+  {lbl:'π',ins:'pi'},{lbl:'|x|',ins:'abs(x)'},
+  {lbl:'(',ins:'('},{lbl:')',ins:')'}
+];
+function buildKB(kbId,inputId,prevId){
+  const kb=$(kbId);if(!kb)return;
+  kb.innerHTML='';
+  KEYS.forEach(k=>{
+    const b=document.createElement('button');
+    b.className='fk';b.textContent=k.lbl;
+    b.onclick=()=>{
+      const inp=$(inputId);
+      const pos=inp.selectionStart;
+      const v=inp.value;
+      inp.value=v.slice(0,pos)+k.ins+v.slice(inp.selectionEnd);
+      inp.focus();inp.selectionStart=inp.selectionEnd=pos+k.ins.length;
+      updatePrev(inputId,prevId);
+    };
+    kb.appendChild(b);
+  });
+}
+function updatePrev(inputId,prevId){
+  const raw=$(inputId).value;
+  $(prevId).textContent='f(x) = '+raw;
+}
+function parseFn(expr){
+  const e=expr
+    .replace(/\^/g,'**')
+    .replace(/\bsqrt\b/g,'Math.sqrt')
+    .replace(/\bexp\b/g,'Math.exp')
+    .replace(/\bln\b/g,'Math.log')
+    .replace(/\blog\b/g,'Math.log10')
+    .replace(/\bsin\b/g,'Math.sin')
+    .replace(/\bcos\b/g,'Math.cos')
+    .replace(/\btan\b/g,'Math.tan')
+    .replace(/\babs\b/g,'Math.abs')
+    .replace(/\bpi\b/g,'Math.PI')
+    .replace(/\be\b/g,'Math.E');
+  return x=>{ try{return Function('x',`return ${e}`)(x)}catch{return NaN} };
+}
+
+/* ── GAUSS ELIMINATION ─────────────────────────────────────── */
+function gaussElim(A,b){
+  const n=A.length,aug=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){
+    let mx=c;for(let r=c+1;r<n;r++) if(Math.abs(aug[r][c])>Math.abs(aug[mx][c])) mx=r;
+    [aug[c],aug[mx]]=[aug[mx],aug[c]];
+    for(let r=c+1;r<n;r++){const f=aug[r][c]/aug[c][c];for(let j=c;j<=n;j++) aug[r][j]-=f*aug[c][j];}
+  }
+  const x=new Array(n).fill(0);
+  for(let i=n-1;i>=0;i--){x[i]=aug[i][n];for(let j=i+1;j<n;j++) x[i]-=aug[i][j]*x[j];x[i]/=aug[i][i];}
+  return x;
+}
+
+/* ── FORMAT POLYNOMIAL ─────────────────────────────────────── */
+function fmtPoly(coefs,nodes){
+  // coefs[i], nodes[i] = x_i (base Newton)
+  let s='P(x) = ';
+  coefs.forEach((c,i)=>{
+    if(Math.abs(c)<1e-12) return;
+    let term=N(c);
+    if(i>0){
+      let prod='';
+      for(let k=0;k<i;k++) prod+=`(x - ${N(nodes[k])})`;
+      term+=` · ${prod}`;
+    }
+    if(i===0) s+=term;
+    else s+= (c>=0?' + ':' - ')+term.replace(/^-/,'');
+  });
+  return s;
+}
+function evalPolyNewton(coefs,nodes,x){
+  let r=coefs[0];
+  let prod=1;
+  for(let i=1;i<coefs.length;i++){prod*=(x-nodes[i-1]);r+=coefs[i]*prod;}
+  return r;
+}
+
+/* ══ NEWTON ═══════════════════════════════════════════════════ */
+function calcNewton(){
+  try{
+    const xs=parse($('nwt-x').value);
+    const ys=parse($('nwt-y').value);
+    const xe=parseFloat($('nwt-eval').value);
+    if(xs.length!==ys.length||xs.length<2) throw 'Necesitas ≥ 2 puntos y misma cantidad de x e y';
+    const n=xs.length;
+    const dd=ys.map(v=>[v]);
+    for(let j=1;j<n;j++)
+      for(let i=0;i<n-j;i++)
+        dd[i][j]=(dd[i+1][j-1]-dd[i][j-1])/(xs[i+j]-xs[i]);
+    const coefs=Array.from({length:n},(_,i)=>dd[0][i]);
+
+    // tabla
+    let tbl='<div class="step-label">Tabla de diferencias divididas</div><div class="result">';
+    tbl+='i   xi        f[xi]     ';
+    for(let j=1;j<n;j++) tbl+=`f[xi..xi+${j}]  `;
+    tbl+='\n';
+    for(let i=0;i<n;i++){
+      tbl+=`${i}   ${N(xs[i],4).padEnd(9)} ${N(dd[i][0],6).padEnd(10)}`;
+      for(let j=1;j<n-i;j++) tbl+=N(dd[i][j],6).padEnd(14);
+      tbl+='\n';
+    }
+    tbl+='</div>';
+
+    // polinomio simbólico
+    let polyStr='P(x) = ';
+    coefs.forEach((c,i)=>{
+      if(Math.abs(c)<1e-12) return;
+      let termParts='';
+      for(let k=0;k<i;k++) termParts+=`(x - ${N(xs[k],4)})`;
+      const cStr=N(c,6);
+      if(i===0){polyStr+=cStr;}
+      else{
+        const sign=c>=0?' + ':' - ';
+        polyStr+=sign+Math.abs(parseFloat(cStr)).toString()+(termParts?' · '+termParts:'');
+      }
+    });
+
+    // sustitución paso a paso
+    let subst=`\nSustituyendo x = ${xe}:\n\nP(${xe}) = `;
+    let terms=[];
+    let prod=1;
+    terms.push(N(coefs[0],6));
+    for(let i=1;i<n;i++){
+      prod*=(xe-xs[i-1]);
+      if(Math.abs(coefs[i])>1e-12)
+        terms.push(`${N(coefs[i],6)} · ${N(prod,6)}`);
+    }
+    subst+=terms.join('\n         + ');
+    const result=evalPolyNewton(coefs,xs,xe);
+    subst+=`\n\nP(${xe}) = ${N(result,8)}`;
+
+    res('res-newton',
+      tbl+
+      '<div class="step-label">Polinomio de Newton</div>'+
+      `<div class="poly-box">${polyStr}</div>`+
+      '<div class="step-label">Evaluación paso a paso</div>'+
+      `<div class="result">${subst}</div>`
+    );
+  }catch(e){showErr('res-newton',e)}
+}
+
+/* ══ HERMITE ══════════════════════════════════════════════════ */
+function calcHermite(){
+  try{
+    const xs=parse($('herm-x').value);
+    const ys=parse($('herm-y').value);
+    const dys=parse($('herm-dy').value);
+    const xe=parseFloat($('herm-eval').value);
+    if(xs.length!==ys.length||xs.length!==dys.length) throw 'x, f(x) y f\'(x) deben tener la misma cantidad';
+    const n=xs.length,N2=2*n;
+    const z=[],Q=[];
+    for(let i=0;i<n;i++){z[2*i]=xs[i];z[2*i+1]=xs[i];}
+    for(let i=0;i<N2;i++) Q[i]=new Array(N2).fill(0);
+    for(let i=0;i<n;i++){
+      Q[2*i][0]=ys[i];Q[2*i+1][0]=ys[i];
+      Q[2*i+1][1]=dys[i];
+      if(i!==0) Q[2*i][1]=(Q[2*i][0]-Q[2*i-1][0])/(z[2*i]-z[2*i-1]);
+    }
+    for(let j=2;j<N2;j++)
+      for(let i=j;i<N2;i++)
+        Q[i][j]=(Q[i][j-1]-Q[i-1][j-1])/(z[i]-z[i-j]);
+
+    const coefs=Array.from({length:N2},(_,i)=>Q[i][i]);
+
+    // tabla
+    let tbl='<div class="step-label">Tabla de diferencias divididas de Hermite</div><div class="result">';
+    tbl+='i   zi        Q[i][0]   Q[i][1]\n';
+    for(let i=0;i<N2;i++) tbl+=`${i}   ${N(z[i],4).padEnd(9)} ${N(Q[i][0],6).padEnd(10)} ${N(Q[i][1]||0,6)}\n`;
+    tbl+='</div>';
+
+    // polinomio simbólico
+    let polyStr='H(x) = ';
+    coefs.forEach((c,i)=>{
+      if(Math.abs(c)<1e-12) return;
+      let prod='';
+      for(let k=0;k<i;k++) prod+=`(x - ${N(z[k],4)})`;
+      const cStr=N(c,6);
+      if(i===0) polyStr+=cStr;
+      else{
+        const sign=c>=0?' + ':' - ';
+        polyStr+=sign+Math.abs(parseFloat(cStr))+(prod?' · '+prod:'');
+      }
+    });
+
+    // evaluación
+    let val=coefs[0],prod=1;
+    let subst=`Sustituyendo x = ${xe}:\n\nH(${xe}) = ${N(coefs[0],6)}`;
+    for(let i=1;i<N2;i++){
+      prod*=(xe-z[i-1]);
+      if(Math.abs(coefs[i])>1e-12)
+        subst+=`\n         + ${N(coefs[i],6)} · ${N(prod,6)}`;
+      val+=coefs[i]*prod;
+    }
+    subst+=`\n\nH(${xe}) = ${N(val,8)}`;
+
+    res('res-hermite',
+      tbl+
+      '<div class="step-label">Polinomio de Hermite</div>'+
+      `<div class="poly-box">${polyStr}</div>`+
+      '<div class="step-label">Evaluación paso a paso</div>'+
+      `<div class="result">${subst}</div>`
+    );
+  }catch(e){showErr('res-hermite',e)}
+}
+
+/* ══ MÍNIMOS CUADRADOS ════════════════════════════════════════ */
+function updateMCUI(){
+  const m=$('mc-modo').value;
+  $('mc-discr').style.display=m==='cont'?'none':'block';
+  $('mc-cont').style.display=m==='cont'?'block':'none';
+  $('mc-gw').style.display=m==='disc-lin'?'none':'block';
+}
+function calcMinCuad(){
+  try{
+    const modo=$('mc-modo').value;
+    if(modo==='cont'){calcMCCont();return;}
+    const xs=parse($('mc-x').value),ys=parse($('mc-y').value);
+    if(xs.length!==ys.length||xs.length<2) throw 'Vectores distintos o muy pocos puntos';
+    const grado=modo==='disc-lin'?1:parseInt($('mc-grado').value);
+    const m=grado+1,nn=xs.length;
+    const A=Array.from({length:m},()=>new Array(m).fill(0));
+    const b=new Array(m).fill(0);
+    for(let i=0;i<m;i++){
+      for(let j=0;j<m;j++) for(let k=0;k<nn;k++) A[i][j]+=Math.pow(xs[k],i+j);
+      for(let k=0;k<nn;k++) b[i]+=ys[k]*Math.pow(xs[k],i);
+    }
+    const coef=gaussElim(A,b);
+    const ymean=ys.reduce((a,v)=>a+v,0)/nn;
+    const yhat=xs.map(x=>coef.reduce((s,c,i)=>s+c*Math.pow(x,i),0));
+    const sst=ys.reduce((s,y)=>s+Math.pow(y-ymean,2),0);
+    const sse=ys.reduce((s,y,i)=>s+Math.pow(y-yhat[i],2),0);
+    const r2=1-sse/sst;
+    let poly='p(x) = '+coef.map((c,i)=>i===0?N(c,6):`${N(c,6)}·x^${i}`).join(' + ');
+    let detail=`Sistema normal (${m}×${m}) resuelto por eliminación gaussiana.\n\n`;
+    detail+=`Coeficientes:\n`+coef.map((c,i)=>`  a${i} = ${N(c,8)}`).join('\n');
+    detail+=`\n\nBondad del ajuste:\n  R² = ${r2.toFixed(6)}\n  SSE = ${N(sse,6)}`;
+    res('res-mincuad',
+      '<div class="step-label">Polinomio ajustado</div>'+
+      `<div class="poly-box">${poly}</div>`+
+      `<div class="result">${detail}</div>`
+    );
+  }catch(e){showErr('res-mincuad',e)}
+}
+function calcMCCont(){
+  try{
+    const expr=$('mc-func').value;
+    const a=parseFloat($('mc-a').value),b=parseFloat($('mc-b').value);
+    const grado=parseInt($('mc-gc').value);
+    const f=parseFn(expr);
+    const integ=(g,lo,hi,N=2000)=>{const h=(hi-lo)/N;let s=0;for(let i=0;i<N;i++) s+=h*(g(lo+i*h)+g(lo+(i+1)*h))/2;return s;};
+    const m=grado+1;
+    const A=Array.from({length:m},()=>new Array(m).fill(0));
+    const rhs=new Array(m).fill(0);
+    for(let i=0;i<m;i++){
+      for(let j=0;j<m;j++) A[i][j]=integ(x=>Math.pow(x,i+j),a,b);
+      rhs[i]=integ(x=>f(x)*Math.pow(x,i),a,b);
+    }
+    const coef=gaussElim(A,rhs);
+    let poly='p(x) = '+coef.map((c,i)=>i===0?N(c,6):`${N(c,6)}·x^${i}`).join(' + ');
+    let detail=`Mínimos cuadrados continuos en [${a}, ${b}]\nBase: {1, x, x², ..., x^${grado}}\n\nCoeficientes:\n`+coef.map((c,i)=>`  a${i} = ${N(c,8)}`).join('\n');
+    res('res-mincuad',
+      '<div class="step-label">Polinomio aproximante</div>'+
+      `<div class="poly-box">${poly}</div>`+
+      `<div class="result">${detail}</div>`
+    );
+  }catch(e){showErr('res-mincuad',e)}
+}
+
+/* ══ SPLINES ══════════════════════════════════════════════════ */
+function calcSpline(){
+  try{
+    const tipo=$('sp-tipo').value;
+    const xs=parse($('sp-x').value),ys=parse($('sp-y').value);
+    const xe=parseFloat($('sp-eval').value);
+    if(xs.length!==ys.length||xs.length<3) throw 'Necesitas ≥ 3 puntos';
+    if(tipo==='cuadratico') calcSplineQuad(xs,ys,xe);
+    else calcSplineCub(xs,ys,xe);
+  }catch(e){showErr('res-spline',e)}
+}
+function calcSplineQuad(xs,ys,xe){
+  const n=xs.length-1;
+  const h=xs.map((v,i)=>i<n?xs[i+1]-v:0);
+  let s0=parseFloat($('sp-s0').value)||0;
+  // Para spline cuadrático: S_i(x) = a_i + b_i(x-xi) + c_i(x-xi)²
+  // Condiciones: S_i(xi)=yi, S_i(xi+1)=yi+1, S'_i continua
+  const a=[...ys.slice(0,n)];
+  const b=new Array(n).fill(0),c=new Array(n).fill(0);
+  b[0]=s0;
+  for(let i=0;i<n;i++){
+    c[i]=(ys[i+1]-a[i]-b[i]*h[i])/(h[i]*h[i]);
+    if(i<n-1) b[i+1]=b[i]+2*c[i]*h[i];
+  }
+  let out='<div class="step-label">Segmentos del spline cuadrático</div><div class="result">';
+  for(let i=0;i<n;i++){
+    out+=`S${i}(x) = ${N(a[i],6)} + ${N(b[i],6)}(x - ${N(xs[i],4)}) + ${N(c[i],6)}(x - ${N(xs[i],4)})²\n`;
+    out+=`   Intervalo: [${N(xs[i],4)}, ${N(xs[i+1],4)}]\n\n`;
+  }
+  out+='</div>';
+  let evalOut='',found=false;
+  for(let i=0;i<n;i++){
+    if(xe>=xs[i]&&xe<=xs[i+1]){
+      const dx=xe-xs[i];
+      const val=a[i]+b[i]*dx+c[i]*dx*dx;
+      evalOut=`<div class="step-label">Evaluación en x = ${xe}</div><div class="result">`;
+      evalOut+=`Segmento S${i}(x) en [${N(xs[i],4)}, ${N(xs[i+1],4)}]\n`;
+      evalOut+=`dx = ${xe} - ${N(xs[i],4)} = ${N(dx,6)}\n\n`;
+      evalOut+=`S${i}(${xe}) = ${N(a[i],6)} + ${N(b[i],6)}·(${N(dx,6)}) + ${N(c[i],6)}·(${N(dx,6)})²\n`;
+      evalOut+=`        = ${N(a[i],6)} + ${N(b[i]*dx,6)} + ${N(c[i]*dx*dx,6)}\n`;
+      evalOut+=`\nS(${xe}) = ${N(val,8)}</div>`;
+      found=true;break;
+    }
+  }
+  if(!found) evalOut=`<div class="err">El punto ${xe} está fuera del rango [${N(xs[0],4)}, ${N(xs[xs.length-1],4)}]</div>`;
+  res('res-spline',out+evalOut);
+}
+function calcSplineCub(xs,ys,xe){
+  const n=xs.length-1;
+  const h=xs.slice(1).map((v,i)=>v-xs[i]);
+  const A=Array.from({length:n+1},()=>new Array(n+1).fill(0));
+  const b=new Array(n+1).fill(0);
+  A[0][0]=1;A[n][n]=1;
+  for(let i=1;i<n;i++){
+    A[i][i-1]=h[i-1];A[i][i]=2*(h[i-1]+h[i]);A[i][i+1]=h[i];
+    b[i]=3*((ys[i+1]-ys[i])/h[i]-(ys[i]-ys[i-1])/h[i-1]);
+  }
+  const M=gaussElim(A,b);
+  const segs=[];
+  for(let i=0;i<n;i++){
+    const ai=ys[i];
+    const bi=(ys[i+1]-ys[i])/h[i]-h[i]*(2*M[i]+M[i+1])/6;
+    const ci=M[i]/2;
+    const di=(M[i+1]-M[i])/(6*h[i]);
+    segs.push({ai,bi,ci,di,x0:xs[i]});
+  }
+  let out='<div class="step-label">Momentos M (sistema tridiagonal resuelto)</div><div class="result">';
+  M.forEach((m,i)=>out+=`M${i} = ${N(m,8)}\n`);
+  out+='</div><div class="step-label">Segmentos del spline cúbico</div><div class="result">';
+  segs.forEach((s,i)=>{
+    out+=`S${i}(x) = ${N(s.ai,6)} + ${N(s.bi,6)}(x-${N(xs[i],4)}) + ${N(s.ci,6)}(x-${N(xs[i],4)})² + ${N(s.di,6)}(x-${N(xs[i],4)})³\n`;
+    out+=`   Intervalo: [${N(xs[i],4)}, ${N(xs[i+1],4)}]\n\n`;
+  });
+  out+='</div>';
+  let evalOut='',found=false;
+  for(let i=0;i<n;i++){
+    if(xe>=xs[i]&&xe<=xs[i+1]){
+      const s=segs[i],dx=xe-s.x0;
+      const val=s.ai+s.bi*dx+s.ci*dx*dx+s.di*dx*dx*dx;
+      evalOut=`<div class="step-label">Evaluación en x = ${xe}</div><div class="result">`;
+      evalOut+=`Segmento S${i}(x) en [${N(xs[i],4)}, ${N(xs[i+1],4)}]\n`;
+      evalOut+=`dx = ${xe} - ${N(xs[i],4)} = ${N(dx,6)}\n\n`;
+      evalOut+=`S${i}(${xe}) = ${N(s.ai,6)} + ${N(s.bi,6)}·${N(dx,6)} + ${N(s.ci,6)}·${N(dx*dx,6)} + ${N(s.di,6)}·${N(dx*dx*dx,6)}\n`;
+      evalOut+=`\nS(${xe}) = ${N(val,8)}</div>`;
+      found=true;break;
+    }
+  }
+  if(!found) evalOut=`<div class="err">El punto ${xe} está fuera del rango</div>`;
+  res('res-spline',out+evalOut);
+}
+
+/* ══ DIFERENCIACIÓN NUMÉRICA ══════════════════════════════════ */
+function updateDNUI(){
+  const t=$('dn-modo').value==='tabla';
+  $('dn-tabla-wrap').style.display=t?'block':'none';
+  $('dn-func-wrap').style.display=t?'none':'block';
+}
+function calcDifNum(){
+  try{
+    const modo=$('dn-modo').value;
+    const orden=parseInt($('dn-orden').value);
+    const formula=$('dn-formula').value;
+    let out='';
+    if(modo==='tabla'){
+      const xs=parse($('dn-x').value),ys=parse($('dn-y').value);
+      if(xs.length!==ys.length) throw 'x e y deben tener la misma cantidad';
+      const idx=parseInt($('dn-idx').value);
+      if(idx<0||idx>=xs.length) throw `Índice ${idx} fuera de rango (0 a ${xs.length-1})`;
+      const x0=xs[idx],f0=ys[idx];
+      out+=`Punto seleccionado: x₀ = ${N(x0,6)},  f(x₀) = ${N(f0,6)}\n`;
+      const canFwd=idx<xs.length-1,canBwd=idx>0,canCen=idx>0&&idx<xs.length-1;
+      if(orden===1){
+        if((formula==='all'||formula==='forward')&&canFwd){
+          const h1=xs[idx+1]-xs[idx];
+          const d=(ys[idx+1]-ys[idx])/h1;
+          out+=`\nProgresiva:\n  f'(${N(x0,4)}) ≈ [f(${N(xs[idx+1],4)}) - f(${N(x0,4)})] / (${N(xs[idx+1],4)} - ${N(x0,4)})\n`;
+          out+=`           = [${N(ys[idx+1],6)} - ${N(f0,6)}] / ${N(h1,6)}\n`;
+          out+=`           = ${N(d,8)}\n`;
+        }
+        if((formula==='all'||formula==='backward')&&canBwd){
+          const h1=xs[idx]-xs[idx-1];
+          const d=(ys[idx]-ys[idx-1])/h1;
+          out+=`\nRegresiva:\n  f'(${N(x0,4)}) ≈ [f(${N(x0,4)}) - f(${N(xs[idx-1],4)})] / (${N(x0,4)} - ${N(xs[idx-1],4)})\n`;
+          out+=`           = [${N(f0,6)} - ${N(ys[idx-1],6)}] / ${N(h1,6)}\n`;
+          out+=`           = ${N(d,8)}\n`;
+        }
+        if((formula==='all'||formula==='central')&&canCen){
+          const ha=xs[idx+1]-xs[idx-1];
+          const d=(ys[idx+1]-ys[idx-1])/ha;
+          out+=`\nCentral:\n  f'(${N(x0,4)}) ≈ [f(${N(xs[idx+1],4)}) - f(${N(xs[idx-1],4)})] / (${N(xs[idx+1],4)} - ${N(xs[idx-1],4)})\n`;
+          out+=`           = [${N(ys[idx+1],6)} - ${N(ys[idx-1],6)}] / ${N(ha,6)}\n`;
+          out+=`           = ${N(d,8)}\n`;
+        }
+      } else {
+        if((formula==='all'||formula==='central')&&idx>0&&idx<xs.length-1){
+          const h1=xs[idx]-xs[idx-1],h2=xs[idx+1]-xs[idx];
+          const d=2*(ys[idx-1]/(h1*(h1+h2))-ys[idx]/(h1*h2)+ys[idx+1]/(h2*(h1+h2)));
+          out+=`\nCentral 2ª derivada (no equiespaciada):\n`;
+          out+=`  f''(${N(x0,4)}) ≈ 2·[f(${N(xs[idx-1],4)})/(h₁(h₁+h₂)) - f(${N(x0,4)})/(h₁h₂) + f(${N(xs[idx+1],4)})/(h₂(h₁+h₂))]\n`;
+          out+=`  h₁=${N(h1,6)}, h₂=${N(h2,6)}\n`;
+          out+=`  f''(${N(x0,4)}) = ${N(d,8)}\n`;
+        }
+        if((formula==='all'||formula==='forward')&&idx<=xs.length-3){
+          const h=xs[idx+1]-xs[idx];
+          const d=(ys[idx]-2*ys[idx+1]+ys[idx+2])/(h*h);
+          out+=`\nProgresiva 2ª derivada:\n  f''≈[f(x₀)-2f(x₁)+f(x₂)]/h² = ${N(d,8)}\n`;
+        }
+        if((formula==='all'||formula==='backward')&&idx>=2){
+          const h=xs[idx]-xs[idx-1];
+          const d=(ys[idx]-2*ys[idx-1]+ys[idx-2])/(h*h);
+          out+=`\nRegresiva 2ª derivada:\n  f''≈[f(x₀)-2f(x₋₁)+f(x₋₂)]/h² = ${N(d,8)}\n`;
+        }
+      }
+    } else {
+      const expr=$('dn-func').value;
+      const x0=parseFloat($('dn-x0').value);
+      const h=parseFloat($('dn-h').value)||0.001;
+      const f=parseFn(expr);
+      const f0=f(x0),fp=f(x0+h),fpp=f(x0+h+h),fm=f(x0-h),fmm=f(x0-h-h);
+      out+=`f(x) = ${expr}\nx₀ = ${x0},  h = ${h}\n\nValores evaluados:\n`;
+      out+=`  f(x₀-2h) = f(${N(x0-2*h,6)}) = ${N(fmm,8)}\n`;
+      out+=`  f(x₀-h)  = f(${N(x0-h,6)}) = ${N(fm,8)}\n`;
+      out+=`  f(x₀)    = f(${N(x0,6)}) = ${N(f0,8)}\n`;
+      out+=`  f(x₀+h)  = f(${N(x0+h,6)}) = ${N(fp,8)}\n`;
+      out+=`  f(x₀+2h) = f(${N(x0+2*h,6)}) = ${N(fpp,8)}\n\n`;
+      if(orden===1){
+        if(formula==='all'||formula==='forward'){
+          const d=(fp-f0)/h;
+          out+=`Progresiva: [f(x₀+h) - f(x₀)] / h = [${N(fp,6)} - ${N(f0,6)}] / ${h} = ${N(d,8)}\n`;
+        }
+        if(formula==='all'||formula==='backward'){
+          const d=(f0-fm)/h;
+          out+=`Regresiva:  [f(x₀) - f(x₀-h)] / h = [${N(f0,6)} - ${N(fm,6)}] / ${h} = ${N(d,8)}\n`;
+        }
+        if(formula==='all'||formula==='central'){
+          const d=(fp-fm)/(2*h);
+          out+=`Central:    [f(x₀+h) - f(x₀-h)] / 2h = [${N(fp,6)} - ${N(fm,6)}] / ${2*h} = ${N(d,8)}\n`;
+        }
+      } else {
+        if(formula==='all'||formula==='forward'){
+          const d=(f0-2*fp+fpp)/(h*h);
+          out+=`Progresiva 2ª: [f(x₀)-2f(x₀+h)+f(x₀+2h)] / h² = ${N(d,8)}\n`;
+        }
+        if(formula==='all'||formula==='backward'){
+          const d=(f0-2*fm+fmm)/(h*h);
+          out+=`Regresiva 2ª:  [f(x₀)-2f(x₀-h)+f(x₀-2h)] / h² = ${N(d,8)}\n`;
+        }
+        if(formula==='all'||formula==='central'){
+          const d=(fp-2*f0+fm)/(h*h);
+          out+=`Central 2ª:    [f(x₀+h)-2f(x₀)+f(x₀-h)] / h² = ${N(d,8)}\n`;
+        }
+      }
+    }
+    res('res-difnum',`<div class="result">${out}</div>`);
+  }catch(e){showErr('res-difnum',e)}
+}
+
+/* ══ TRAPECIOS ════════════════════════════════════════════════ */
+function updateTrapUI(){
+  const t=$('tr-modo').value==='tabla';
+  $('tr-func-wrap').style.display=t?'none':'block';
+  $('tr-tabla-wrap').style.display=t?'block':'none';
+}
+function calcTrapecio(){
+  try{
+    const modo=$('tr-modo').value;
+    let xs,ys,out='';
+    if(modo==='func'){
+      const expr=$('tr-func').value;
+      const a=parseFloat($('tr-a').value),b=parseFloat($('tr-b').value);
+      const n=parseInt($('tr-n').value);
+      const f=parseFn(expr);
+      const h=(b-a)/n;
+      xs=Array.from({length:n+1},(_,i)=>a+i*h);
+      ys=xs.map(f);
+      out+=`f(x) = ${expr}\na = ${a},  b = ${b},  n = ${n},  h = ${N(h,6)}\n\n`;
+    } else {
+      xs=parse($('tr-tx').value);ys=parse($('tr-ty').value);
+      if(xs.length!==ys.length) throw 'x e y deben tener la misma cantidad';
+      out+=`Tabla de ${xs.length} puntos\n\n`;
+    }
+    out+=`Valores f(xᵢ):\n`;
+    xs.forEach((x,i)=>out+=`  f(${N(x,6)}) = ${N(ys[i],8)}\n`);
+    out+=`\nAplicando fórmula del trapecio compuesto:\n`;
+    out+=`I ≈ Σ [(xᵢ₊₁ - xᵢ)/2 · (f(xᵢ) + f(xᵢ₊₁))]\n\n`;
+    let I=0;
+    for(let i=0;i<xs.length-1;i++){
+      const hi=xs[i+1]-xs[i];
+      const piece=hi*(ys[i]+ys[i+1])/2;
+      out+=`  Tramo ${i}: (${N(hi,6)}/2)·(${N(ys[i],6)} + ${N(ys[i+1],6)}) = ${N(piece,8)}\n`;
+      I+=piece;
+    }
+    out+=`\nI ≈ ${N(I,10)}`;
+    res('res-trap',`<div class="result">${out}</div>`);
+  }catch(e){showErr('res-trap',e)}
+}
+
+/* ══ SIMPSON ══════════════════════════════════════════════════ */
+function updateSimpUI(){
+  const t=$('si-modo').value==='tabla';
+  $('si-func-wrap').style.display=t?'none':'block';
+  $('si-tabla-wrap').style.display=t?'block':'none';
+}
+function calcSimpson(){
+  try{
+    const regla=$('si-regla').value;
+    const modo=$('si-modo').value;
+    let xs,ys,out='',h;
+    if(modo==='func'){
+      const expr=$('si-func').value;
+      const a=parseFloat($('si-a').value),b=parseFloat($('si-b').value);
+      const n=parseInt($('si-n').value);
+      const f=parseFn(expr);
+      h=(b-a)/n;
+      xs=Array.from({length:n+1},(_,i)=>a+i*h);
+      ys=xs.map(f);
+      out+=`f(x) = ${expr}\na = ${a},  b = ${b},  n = ${n},  h = ${N(h,6)}\n\n`;
+    } else {
+      xs=parse($('si-tx').value);ys=parse($('si-ty').value);
+      if(xs.length!==ys.length) throw 'x e y misma cantidad';
+      h=xs[1]-xs[0];
+      out+=`Tabla de ${xs.length} puntos (h ≈ ${N(h,6)})\n\n`;
+    }
+    const n=xs.length-1;
+    out+=`Puntos:\n`;
+    xs.forEach((x,i)=>out+=`  f(x${i}) = f(${N(x,6)}) = ${N(ys[i],8)}\n`);
+    out+='\n';
+    if(regla==='1/3'){
+      if(n%2!==0) throw `n=${n} no es par. Simpson 1/3 requiere n par.`;
+      out+=`Fórmula Simpson 1/3 compuesta:\nI = (h/3)[f(x₀) + 4f(x₁) + 2f(x₂) + 4f(x₃) + ... + 4f(xₙ₋₁) + f(xₙ)]\n\n`;
+      let suma=ys[0]+ys[n];
+      out+=`  f(x₀) = ${N(ys[0],6)}  → coef 1\n`;
+      for(let i=1;i<n;i++){
+        const coef=i%2===0?2:4;
+        out+=`  f(x${i}) = ${N(ys[i],6)}  → coef ${coef}  → ${coef}·${N(ys[i],6)} = ${N(coef*ys[i],6)}\n`;
+        suma+=coef*ys[i];
+      }
+      out+=`  f(xₙ) = ${N(ys[n],6)}  → coef 1\n\n`;
+      const I=h/3*suma;
+      out+=`I = (${N(h,6)}/3) · ${N(suma,6)} = ${N(I,10)}`;
+    } else if(regla==='3/8'){
+      if(n%3!==0) throw `n=${n} no es múltiplo de 3.`;
+      out+=`Fórmula Simpson 3/8:\nI = (3h/8)[f(x₀) + 3f(x₁) + 3f(x₂) + 2f(x₃) + ... + f(xₙ)]\n\n`;
+      let suma=ys[0]+ys[n];
+      out+=`  f(x₀) = ${N(ys[0],6)}  → coef 1\n`;
+      for(let i=1;i<n;i++){
+        const coef=i%3===0?2:3;
+        out+=`  f(x${i}) = ${N(ys[i],6)}  → coef ${coef}  → ${N(coef*ys[i],6)}\n`;
+        suma+=coef*ys[i];
+      }
+      out+=`  f(xₙ) = ${N(ys[n],6)}  → coef 1\n\n`;
+      const I=3*h/8*suma;
+      out+=`I = (3·${N(h,6)}/8) · ${N(suma,6)} = ${N(I,10)}`;
+    } else {
+      // compuesta automática
+      let I=0,detail='';
+      if(n%2===0){
+        let s=ys[0]+ys[n];
+        for(let i=1;i<n;i++) s+=(i%2===0?2:4)*ys[i];
+        I=h/3*s;
+        detail=`n=${n} es par → usando Simpson 1/3 compuesta\nI = (h/3)·Σ = ${N(I,10)}`;
+      } else if(n%3===0){
+        let s=ys[0]+ys[n];
+        for(let i=1;i<n;i++) s+=(i%3===0?2:3)*ys[i];
+        I=3*h/8*s;
+        detail=`n=${n} múltiplo de 3 → usando Simpson 3/8\nI = (3h/8)·Σ = ${N(I,10)}`;
+      } else {
+        const s38=ys[0]+3*ys[1]+3*ys[2]+ys[3];
+        const I38=3*h/8*s38;
+        let s13=ys[3]+ys[n];
+        for(let i=4;i<n;i++) s13+=((i-3)%2===0?2:4)*ys[i];
+        const I13=h/3*s13;
+        I=I38+I13;
+        detail=`n=${n} → 3/8 para primeros 3 tramos + 1/3 para el resto\nI₃/₈ = ${N(I38,8)},  I₁/₃ = ${N(I13,8)}\nI total = ${N(I,10)}`;
+      }
+      out+=detail;
+    }
+    res('res-simpson',`<div class="result">${out}</div>`);
+  }catch(e){showErr('res-simpson',e)}
+}
+
+/* ── INIT ─────────────────────────────────────────────────── */
+buildKB('mc-kb','mc-func','mc-prev');
+buildKB('dn-kb','dn-func','dn-prev');
+buildKB('tr-kb','tr-func','tr-prev');
+buildKB('si-kb','si-func','si-prev');
+</script>
